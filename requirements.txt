@@ -1,5 +1,6 @@
 opencv-python
 mediapipe
+numpy
 
 # dev
 pre-commit
