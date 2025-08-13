@@ -1,0 +1,47 @@
+[tool.ruff]
+line-length = 79
+target-version = "py310"
+
+[tool.ruff.format]
+quote-style = "double"
+line-ending = "lf"
+indent-style = "space"
+skip-magic-trailing-comma = false
+
+[tool.ruff.lint]
+extend-select = [
+    "E",   # pycodestyle
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # bugbear
+    "C90", # mccabe
+    "D",  # pydocstyle
+    "ERA",  # eradicate
+]
+ignore = [
+    "E203",
+    # "W503",
+]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+
+[tool.mypy]
+python_version = "3.11"
+strict = false
+ignore_missing_imports = true
+
+[build-system]
+requires = ["setuptools", "wheel", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stream-things"
+dynamic = ["version"]
+description = "Streaming things"
+
+readme = "README.rst"
+
+[tool.setuptools_scm]
+version_scheme = "post-release" # Uses Git tags for versioning
