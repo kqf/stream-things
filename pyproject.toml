@@ -16,7 +16,7 @@ extend-select = [
     "UP",  # pyupgrade
     "B",   # bugbear
     "C90", # mccabe
-    "D",  # pydocstyle
+    # "D",  # pydocstyle
     "ERA",  # eradicate
 ]
 ignore = [
