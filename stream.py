@@ -10,15 +10,13 @@ OUTPUT_FILENAME = "timelapse.mp4"
 VIDEO_CODEC = "mp4v"
 
 # Desired recording resolution (width, height)
-# RECORD_RESOLUTION = 848 // 2, 480 // 2  # (480, 360)
 RECORD_RESOLUTION = None
-# RECORD_RESOLUTION = None  # Use None to keep original
 
 
 def build_writer(resolution):
     return cv2.VideoWriter(
         OUTPUT_FILENAME,
-        cv2.VideoWriter_fourcc(*VIDEO_CODEC),
+        cv2.VideoWriter_fourcc(*VIDEO_CODEC),  # type: ignore
         OUTPUT_FPS,
         resolution,
     )
@@ -54,7 +52,9 @@ def resize_frame(frame, target_resolution):
         return frame
 
     return cv2.resize(
-        frame, (target_w, target_h), interpolation=cv2.INTER_AREA
+        frame,
+        (target_w, target_h),
+        interpolation=cv2.INTER_AREA,
     )
 
 
@@ -78,7 +78,6 @@ def record_timelapse(cap, video_writer, target_resolution):
             continue
 
         video_writer.write(resized_frame)
-        # cv2.resizeWindow("Timelapse Capture", 848 // 2, 480 // 2)
 
 
 def main():
