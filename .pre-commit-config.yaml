@@ -29,3 +29,13 @@ repos:
       - id: mypy
         additional_dependencies: ["types-PyYAML"]
         args: ["--config-file", "pyproject.toml"]
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+
+  - repo: https://github.com/openstack/bashate
+    rev: 2.1.1
+    hooks:
+      - id: bashate
