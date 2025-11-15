@@ -43,6 +43,7 @@ description = "Streaming things"
 dependencies = [
     "mediapipe",
     "opencv-python",
+    "numpy",
 ]
 
 readme = "README.rst"
