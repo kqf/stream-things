@@ -40,6 +40,10 @@ build-backend = "setuptools.build_meta"
 name = "stream-things"
 dynamic = ["version"]
 description = "Streaming things"
+dependencies = [
+    "mediapipe",
+    "opencv-python",
+]
 
 readme = "README.rst"
 
