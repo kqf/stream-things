@@ -22,23 +22,18 @@ def build_writer(resolution):
     )
 
 
-def adjust_videowriter(frame, requested_resolution, current_writer):
+def adjust_resolution(frame, requested_resolution):
     height, width, _ = frame.shape
     print(f"📐 Stream resolution: {width}x{height}")
 
     if requested_resolution is None:
-        return build_writer((width, height))
+        return width, height
 
     req_w, req_h = requested_resolution
     if req_w >= width or req_h >= height:
-        print("ℹ️ Requested resolution >= stream — using original resolution.")
-        return current_writer
+        return requested_resolution
 
-    final_resolution = (req_w, req_h)
-    print(f"📉 Resizing recorded frames to {req_w}x{req_h}")
-
-    current_writer.release()
-    return build_writer(final_resolution)
+    return req_w, req_h
 
 
 def resize_frame(frame, target_resolution):
@@ -97,7 +92,8 @@ def main():
             print("❌ Error: Cannot read first frame from stream")
             return
 
-        writer = adjust_videowriter(frame, RECORD_RESOLUTION, writer)
+        print("Adjusted resolution")
+        print(adjust_resolution(frame, RECORD_RESOLUTION))
 
         print(
             f"🎥 Recording timelapse to '{OUTPUT_FILENAME}' "
