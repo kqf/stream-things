@@ -62,7 +62,8 @@ def record_timelapse(cap, video_writer, target_resolution):
             print("❌ Stream ended or failed — finishing up...")
             break
 
-        resized_frame = resize_frame(frame, target_resolution)
+        resolution = adjust_resolution(frame, target_resolution)
+        resized_frame = resize_frame(frame, resolution)
         cv2.imshow("Timelapse Capture", resized_frame)  # Show original stream
         if cv2.waitKey(30) & 0xFF == ord("q"):
             print("🛑 'q' pressed — exiting...")
@@ -85,29 +86,15 @@ def main():
 
     print("✅ RTMP stream opened successfully")
     writer = build_writer(RECORD_RESOLUTION)
+    print(
+        f"🎥 Recording timelapse to '{OUTPUT_FILENAME}' "
+        f"at {OUTPUT_FPS} FPS, "
+        f"skipping every {SKIP_FRAMES} frames"
+    )
 
-    try:
-        ret, frame = cap.read()
-        if not ret:
-            print("❌ Error: Cannot read first frame from stream")
-            return
+    record_timelapse(cap, writer, RECORD_RESOLUTION)
 
-        print("Adjusted resolution")
-        print(adjust_resolution(frame, RECORD_RESOLUTION))
-
-        print(
-            f"🎥 Recording timelapse to '{OUTPUT_FILENAME}' "
-            f"at {OUTPUT_FPS} FPS, "
-            f"skipping every {SKIP_FRAMES} frames"
-        )
-
-        record_timelapse(cap, writer, RECORD_RESOLUTION)
-
-    finally:
-        cap.release()
-        writer.release()
-        cv2.destroyAllWindows()
-        print(f"✅ Timelapse saved as '{OUTPUT_FILENAME}'")
+    print(f"✅ Timelapse saved as '{OUTPUT_FILENAME}'")
 
 
 if __name__ == "__main__":
