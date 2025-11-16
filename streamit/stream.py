@@ -92,7 +92,8 @@ def main():
             print("❌ Error: Cannot read first frame from stream")
             return
 
-        writer = adjust_resolution(frame, RECORD_RESOLUTION, writer)
+        print("Adjusted resolution")
+        print(adjust_resolution(frame, RECORD_RESOLUTION))
 
         print(
             f"🎥 Recording timelapse to '{OUTPUT_FILENAME}' "
