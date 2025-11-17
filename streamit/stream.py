@@ -71,14 +71,14 @@ def resize_frame(frame, target_resolution):
     )
 
 
-def record_timelapse(cap, video_writer, target_resolution):
+def record_timelapse(cap, target_resolution):
     frame_count = 0
 
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            print("❌ Stream ended or failed — finishing up...")
-            break
+    with dynamic_writer(Path("test.mp4")) as write:
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
 
         resolution = adjust_resolution(frame, target_resolution)
         resized_frame = resize_frame(frame, resolution)
@@ -87,11 +87,11 @@ def record_timelapse(cap, video_writer, target_resolution):
             print("🛑 'q' pressed — exiting...")
             break
 
-        frame_count += 1
-        if frame_count % SKIP_FRAMES != 0:
-            continue
+            frame_count += 1
+            if frame_count % SKIP_FRAMES != 0:
+                continue
 
-        video_writer.write(resized_frame)
+            write(resized_frame)
 
 
 def main():
