@@ -1,4 +1,8 @@
+from dataclasses import dataclass, field
+from pathlib import Path
+
 import cv2
+import numpy as np
 
 # === Configuration ===
 
@@ -13,13 +17,27 @@ VIDEO_CODEC = "mp4v"
 RECORD_RESOLUTION = None
 
 
-def build_writer(resolution):
+def build_writer(resolution: tuple[int, int]) -> cv2.VideoWriter:
     return cv2.VideoWriter(
         OUTPUT_FILENAME,
         cv2.VideoWriter_fourcc(*VIDEO_CODEC),  # type: ignore
         OUTPUT_FPS,
         resolution,
     )
+
+
+@dataclass
+class DynamicWriter:
+    filename: Path
+    codec: str
+    fps: int
+    writer: cv2.VideoWriter | None = field(init=False)
+
+    def write(self, frame: np.ndarray) -> None:
+        if not self.writer:
+            h, w, *_ = frame.shape
+            self.writer = build_writer((h, w))
+        self.writer.write(frame)
 
 
 def adjust_resolution(frame, requested_resolution):
@@ -79,11 +97,6 @@ def record_timelapse(cap, video_writer, target_resolution):
 def main():
     cap = cv2.VideoCapture(1)
     cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-
-    if not cap.isOpened():
-        print("❌ Error: Cannot open RTMP stream")
-        return
-
     print("✅ RTMP stream opened successfully")
     writer = build_writer(RECORD_RESOLUTION)
     print(
@@ -91,9 +104,7 @@ def main():
         f"at {OUTPUT_FPS} FPS, "
         f"skipping every {SKIP_FRAMES} frames"
     )
-
     record_timelapse(cap, writer, RECORD_RESOLUTION)
-
     print(f"✅ Timelapse saved as '{OUTPUT_FILENAME}'")
 
 
