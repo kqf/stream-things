@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from contextlib import contextmanager
 from pathlib import Path
 
 import cv2
@@ -17,27 +17,37 @@ VIDEO_CODEC = "mp4v"
 RECORD_RESOLUTION = None
 
 
-def build_writer(resolution: tuple[int, int]) -> cv2.VideoWriter:
-    return cv2.VideoWriter(
-        OUTPUT_FILENAME,
-        cv2.VideoWriter_fourcc(*VIDEO_CODEC),  # type: ignore
-        OUTPUT_FPS,
-        resolution,
-    )
+@contextmanager
+def dynamic_writer(filename: Path, codec: str = "mp4v", fps: int = 30):
+    writer = None
 
-
-@dataclass
-class DynamicWriter:
-    filename: Path
-    codec: str
-    fps: int
-    writer: cv2.VideoWriter | None = field(init=False)
-
-    def write(self, frame: np.ndarray) -> None:
-        if not self.writer:
+    def write(frame: np.ndarray):
+        nonlocal writer
+        if not writer:
             h, w, *_ = frame.shape
-            self.writer = build_writer((h, w))
-        self.writer.write(frame)
+            writer = cv2.VideoWriter(
+                str(filename),
+                cv2.VideoWriter_fourcc(*codec),  # type: ignore
+                fps,
+                (w, h),
+            )
+        writer.write(frame)
+
+    yield write
+
+    if writer is not None:
+        writer.release()
+
+
+def streamopen(stream=1):
+    capture = cv2.VideoCapture(stream)
+    capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+    while True:
+        ret, frame = capture.read()
+        if not ret:
+            break
+        yield frame
+    capture.release()
 
 
 def adjust_resolution(frame, requested_resolution):
@@ -71,21 +81,15 @@ def resize_frame(frame, target_resolution):
     )
 
 
-def record_timelapse(cap, target_resolution):
-    frame_count = 0
-
+def record_timelapse(target_resolution):
     with dynamic_writer(Path("test.mp4")) as write:
-        while True:
-            ret, frame = cap.read()
-            if not ret:
+        for frame_count, frame in enumerate(streamopen()):
+            resolution = adjust_resolution(frame, target_resolution)
+            resized_frame = resize_frame(frame, resolution)
+            cv2.imshow("Timelapse Capture", resized_frame)
+            if cv2.waitKey(30) & 0xFF == ord("q"):
+                print("🛑 'q' pressed — exiting...")
                 break
-
-        resolution = adjust_resolution(frame, target_resolution)
-        resized_frame = resize_frame(frame, resolution)
-        cv2.imshow("Timelapse Capture", resized_frame)  # Show original stream
-        if cv2.waitKey(30) & 0xFF == ord("q"):
-            print("🛑 'q' pressed — exiting...")
-            break
 
             frame_count += 1
             if frame_count % SKIP_FRAMES != 0:
@@ -97,14 +101,7 @@ def record_timelapse(cap, target_resolution):
 def main():
     cap = cv2.VideoCapture(1)
     cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-    print("✅ RTMP stream opened successfully")
-    writer = build_writer(RECORD_RESOLUTION)
-    print(
-        f"🎥 Recording timelapse to '{OUTPUT_FILENAME}' "
-        f"at {OUTPUT_FPS} FPS, "
-        f"skipping every {SKIP_FRAMES} frames"
-    )
-    record_timelapse(cap, writer, RECORD_RESOLUTION)
+    record_timelapse(RECORD_RESOLUTION)
     print(f"✅ Timelapse saved as '{OUTPUT_FILENAME}'")
 
 
