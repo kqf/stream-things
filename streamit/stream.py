@@ -4,15 +4,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-# === Configuration ===
-
 rtmp_url = "rtmp://192.168.0.11:1935/stream/hello"
-
-SKIP_FRAMES = 30
-OUTPUT_FPS = 15
-OUTPUT_FILENAME = "timelapse.mp4"
-VIDEO_CODEC = "mp4v"
-
 # Desired recording resolution (width, height)
 RECORD_RESOLUTION = None
 
@@ -81,7 +73,7 @@ def resize_frame(frame, target_resolution):
     )
 
 
-def record_timelapse(target_resolution):
+def record_timelapse(target_resolution, skip=30):
     with dynamic_writer(Path("test.mp4")) as write:
         for frame_count, frame in enumerate(streamopen()):
             resolution = adjust_resolution(frame, target_resolution)
@@ -92,7 +84,7 @@ def record_timelapse(target_resolution):
                 break
 
             frame_count += 1
-            if frame_count % SKIP_FRAMES != 0:
+            if frame_count % skip != 0:
                 continue
 
             write(resized_frame)
@@ -102,7 +94,6 @@ def main():
     cap = cv2.VideoCapture(1)
     cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
     record_timelapse(RECORD_RESOLUTION)
-    print(f"✅ Timelapse saved as '{OUTPUT_FILENAME}'")
 
 
 if __name__ == "__main__":
