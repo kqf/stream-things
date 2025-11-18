@@ -39,6 +39,17 @@ def dynamic_writer(filename: Path, codec: str = "mp4v", fps: int = 30):
         writer.release()
 
 
+def streamopen(stream=1):
+    capture = cv2.VideoCapture(stream)
+    capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+    while True:
+        ret, frame = capture.read()
+        if not ret:
+            break
+        yield frame
+    capture.release()
+
+
 def adjust_resolution(frame, requested_resolution):
     height, width, _ = frame.shape
     print(f"📐 Stream resolution: {width}x{height}")
@@ -70,15 +81,9 @@ def resize_frame(frame, target_resolution):
     )
 
 
-def record_timelapse(cap, target_resolution):
-    frame_count = 0
-
+def record_timelapse(target_resolution):
     with dynamic_writer(Path("test.mp4")) as write:
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
-
+        for frame_count, frame in enumerate(streamopen()):
             resolution = adjust_resolution(frame, target_resolution)
             resized_frame = resize_frame(frame, resolution)
             cv2.imshow("Timelapse Capture", resized_frame)
@@ -96,13 +101,7 @@ def record_timelapse(cap, target_resolution):
 def main():
     cap = cv2.VideoCapture(1)
     cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-    print("✅ RTMP stream opened successfully")
-    print(
-        f"🎥 Recording timelapse to '{OUTPUT_FILENAME}' "
-        f"at {OUTPUT_FPS} FPS, "
-        f"skipping every {SKIP_FRAMES} frames"
-    )
-    record_timelapse(cap, RECORD_RESOLUTION)
+    record_timelapse(RECORD_RESOLUTION)
     print(f"✅ Timelapse saved as '{OUTPUT_FILENAME}'")
 
 
