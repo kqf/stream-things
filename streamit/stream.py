@@ -27,7 +27,7 @@ def dynamic_writer(filename: Path, codec: str = "mp4v", fps: int = 30):
         writer.release()
 
 
-def streamopen(stream=1):
+def streamopen(stream=0):
     capture = cv2.VideoCapture(stream)
     capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
     while True:
@@ -38,9 +38,6 @@ def streamopen(stream=1):
     capture.release()
 
     yield write
-
-    if writer is not None:
-        writer.release()
 
 def adjust_resolution(frame, requested_resolution):
     height, width, _ = frame.shape
@@ -73,7 +70,7 @@ def resize_frame(frame, target_resolution):
     )
 
 
-def record_timelapse(target_resolution, skip=30):
+def main(target_resolution=None, skip=30) -> None:
     with dynamic_writer(Path("test.mp4")) as write:
         for frame_count, frame in enumerate(streamopen()):
             resolution = adjust_resolution(frame, target_resolution)
@@ -88,12 +85,6 @@ def record_timelapse(target_resolution, skip=30):
                 continue
 
             write(resized_frame)
-
-
-def main():
-    cap = cv2.VideoCapture(1)
-    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-    record_timelapse(None)
 
 
 if __name__ == "__main__":
