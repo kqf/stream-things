@@ -27,7 +27,7 @@ def dynamic_writer(filename: Path, codec: str = "mp4v", fps: int = 30):
         writer.release()
 
 
-def streamopen(stream=1):
+def streamopen(stream=0):
     capture = cv2.VideoCapture(stream)
     capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
     while True:
