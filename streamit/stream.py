@@ -37,6 +37,7 @@ def streamopen(stream=0):
         yield frame
     capture.release()
 
+    yield write
 
 def adjust_resolution(frame, requested_resolution):
     height, width, _ = frame.shape
