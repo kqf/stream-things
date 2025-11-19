@@ -4,10 +4,6 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-rtmp_url = "rtmp://192.168.0.11:1935/stream/hello"
-# Desired recording resolution (width, height)
-RECORD_RESOLUTION = None
-
 
 @contextmanager
 def dynamic_writer(filename: Path, codec: str = "mp4v", fps: int = 30):
@@ -41,6 +37,10 @@ def streamopen(stream=1):
         yield frame
     capture.release()
 
+    yield write
+
+    if writer is not None:
+        writer.release()
 
 def adjust_resolution(frame, requested_resolution):
     height, width, _ = frame.shape
@@ -93,7 +93,7 @@ def record_timelapse(target_resolution, skip=30):
 def main():
     cap = cv2.VideoCapture(1)
     cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-    record_timelapse(RECORD_RESOLUTION)
+    record_timelapse(None)
 
 
 if __name__ == "__main__":
