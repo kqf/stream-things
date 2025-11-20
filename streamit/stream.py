@@ -37,44 +37,30 @@ def streamopen(stream=0):
         yield frame
     capture.release()
 
-    yield write
 
-def adjust_resolution(frame, requested_resolution):
-    height, width, _ = frame.shape
-    print(f"📐 Stream resolution: {width}x{height}")
-
-    if requested_resolution is None:
-        return width, height
-
-    req_w, req_h = requested_resolution
-    if req_w >= width or req_h >= height:
-        return requested_resolution
-
-    return req_w, req_h
-
-
-def resize_frame(frame, target_resolution):
-    if target_resolution is None:
+def resize(frame, height=None):
+    if height is None:
         return frame
 
-    height, width, _ = frame.shape
-    target_w, target_h = target_resolution
+    h, w, _ = frame.shape
 
-    if target_w >= width or target_h >= height:
+    if height >= h:
         return frame
+
+    scale = height / h
+    new_w = int(w * scale)
 
     return cv2.resize(
         frame,
-        (target_w, target_h),
+        (new_w, height),
         interpolation=cv2.INTER_AREA,
     )
 
 
-def main(target_resolution=None, skip=30) -> None:
+def main(h: int | None = None, skip: int = 30) -> None:
     with dynamic_writer(Path("test.mp4")) as write:
         for frame_count, frame in enumerate(streamopen()):
-            resolution = adjust_resolution(frame, target_resolution)
-            resized_frame = resize_frame(frame, resolution)
+            resized_frame = resize(frame, h)
             cv2.imshow("Timelapse Capture", resized_frame)
             if cv2.waitKey(30) & 0xFF == ord("q"):
                 print("🛑 'q' pressed — exiting...")
