@@ -1,8 +1,12 @@
+import logging
 from contextlib import contextmanager
 from pathlib import Path
 
 import cv2
 import numpy as np
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 @contextmanager
@@ -63,7 +67,7 @@ def main(h: int | None = None, skip: int = 30) -> None:
             resized_frame = resize(frame, h)
             cv2.imshow("Timelapse Capture", resized_frame)
             if cv2.waitKey(30) & 0xFF == ord("q"):
-                print("🛑 'q' pressed — exiting...")
+                logger.info("'q' pressed — exiting...")
                 break
 
             frame_count += 1
