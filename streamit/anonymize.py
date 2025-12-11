@@ -3,60 +3,6 @@ import mediapipe as mp
 import numpy as np
 
 
-def extract_eye_patch(
-    frame,
-    landmarks,
-    indices,
-    scale=2.5,
-    target_size=64,
-):
-    h, w, _ = frame.shape
-    points = np.array(
-        [[landmarks[i].x * w, landmarks[i].y * h] for i in indices],
-        dtype=np.float32,
-    )
-    cx, cy = points.mean(axis=0)
-
-    eye_w = np.linalg.norm(points[1] - points[3])
-    box_size = eye_w * scale
-
-    x1 = int(cx - box_size / 2)
-    y1 = int(cy - box_size / 2)
-    x2 = int(cx + box_size / 2)
-    y2 = int(cy + box_size / 2)
-
-    x1 = max(x1, 0)
-    y1 = max(y1, 0)
-    x2 = min(x2, w)
-    y2 = min(y2, h)
-
-    eye_patch = frame[y1:y2, x1:x2]
-    if eye_patch.shape[0] == 0 or eye_patch.shape[1] == 0:
-        return frame[:64, :64], (0, 0)
-
-    resized = cv2.resize(eye_patch, (target_size, target_size))
-    normalized = resized.astype(np.float32) / 127.5 - 1.0
-    input_tensor = normalized[np.newaxis, :, :, :]
-
-    return input_tensor, (x1, y1)
-
-
-def draw_eye(frame, face_landmarks, indices, infer_iris):
-    input_tensor, top_left = extract_eye_patch(frame, face_landmarks, indices)
-    if input_tensor is None:
-        return
-
-    iris_landmarks = infer_iris(input_tensor)
-    x, y, _ = iris_landmarks.reshape(-1, 3)[-1]  # Last point is the center
-    x = x / 2.0
-    y = y / 2.0
-
-    px = int(x + top_left[0])
-    py = int(y + top_left[1])
-    print(px, py)
-    cv2.circle(frame, (px, py), 2, (0, 0, 255))
-
-
 def draw_face_box(frame, landmarks, color=(255, 0, 0)):
     h, w, _ = frame.shape
     xs = [lm.x * w for lm in landmarks]
