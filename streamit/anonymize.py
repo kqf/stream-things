@@ -57,7 +57,8 @@ def to_mask(img_gray_3ch, threshold=1):
 
 
 def paint_face(
-    frame: np.ndarray, bbox: tuple[int, int, int, int]
+    frame: np.ndarray,
+    bbox: tuple[int, int, int, int],
 ) -> np.ndarray:
     output = frame.copy()
     xmin, ymin, xmax, ymax = bbox
@@ -124,31 +125,76 @@ def paint_face(
     return output
 
 
+def draw_bbox_xywh(frame, bbox, color=(0, 255, 0), thickness=2):
+    if bbox is None:
+        return frame
+
+    x, y, w, h = map(int, bbox)
+
+    cv2.rectangle(frame, (x, y), (x + w, y + h), color, thickness)
+    return frame
+
+
+def head_bbox_from_pose(frame, head_landmarks, padding=0.2):
+    h, w, _ = frame.shape
+
+    xs = [int(lm.x * w) for lm in head_landmarks if lm.visibility > 0.5]
+    ys = [int(lm.y * h) for lm in head_landmarks if lm.visibility > 0.5]
+
+    if not xs or not ys:
+        return None
+
+    x1, x2 = min(xs), max(xs)
+    y1, y2 = min(ys), max(ys)
+
+    pad_x = int((x2 - x1) * padding)
+    pad_y = int((y2 - y1) * padding)
+
+    x1 = max(0, x1 - pad_x)
+    y1 = max(0, y1 - pad_y)
+    x2 = min(w, x2 + pad_x)
+    y2 = min(h, y2 + pad_y)
+    h = (y2 - y1) * 6
+    return (x1, y1 - h // 3, x2 - x1, h)  # XYWH
+
+
 def main():
     # Constants
-    mp_face_mesh = mp.solutions.face_mesh  # type: ignore
-    face_mesh = mp_face_mesh.FaceMesh(
+    mp_pose = mp.solutions.pose
+
+    pose = mp_pose.Pose(
         static_image_mode=False,
-        max_num_faces=1,
-        refine_landmarks=True,  # Required for iris tracking
+        model_complexity=1,
+        smooth_landmarks=True,
+        enable_segmentation=False,
         min_detection_confidence=0.5,
         min_tracking_confidence=0.5,
     )
-
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
     while True:
         ret, frame = cap.read()
         if not ret:
             break
 
+        frame = cv2.imread("man-standing.avif")
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        result = face_mesh.process(rgb)
+        result = pose.process(rgb)
 
-        if result.multi_face_landmarks:
-            face = result.multi_face_landmarks[0].landmark
-            draw_face_box(frame, face)
-            bbox = to_xyxy(frame, face)
-            frame = paint_face(frame, bbox)
+        if result.pose_landmarks:
+            landmarks = result.pose_landmarks.landmark
+
+            head_landmarks = [
+                landmarks[mp_pose.PoseLandmark.NOSE],
+                landmarks[mp_pose.PoseLandmark.LEFT_EYE],
+                landmarks[mp_pose.PoseLandmark.RIGHT_EYE],
+                landmarks[mp_pose.PoseLandmark.LEFT_EAR],
+                landmarks[mp_pose.PoseLandmark.RIGHT_EAR],
+            ]
+
+            bbox = head_bbox_from_pose(frame, head_landmarks)
+            print(bbox)
+            # frame = paint_face(frame, bbox)
+            frame = draw_bbox_xywh(frame, bbox)
         cv2.imshow("Iris tracking", frame)
         if cv2.waitKey(1) & 0xFF == 27:
             break
