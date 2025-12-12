@@ -1,6 +1,10 @@
+from contextlib import contextmanager
+from typing import Optional
 import cv2
 import mediapipe as mp
 import numpy as np
+
+XYWH = tuple[int, int, int, int]
 
 
 def draw_face_box(frame, landmarks, color=(255, 0, 0)):
@@ -158,10 +162,9 @@ def head_bbox_from_pose(frame, head_landmarks, padding=0.2):
     return (x1, y1 - h // 3, x2 - x1, h)  # XYWH
 
 
-def main():
-    # Constants
+@contextmanager
+def extract_position():
     mp_pose = mp.solutions.pose
-
     pose = mp_pose.Pose(
         static_image_mode=False,
         model_complexity=1,
@@ -170,34 +173,45 @@ def main():
         min_detection_confidence=0.5,
         min_tracking_confidence=0.5,
     )
-    cap = cv2.VideoCapture(1)
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
 
-        frame = cv2.imread("man-standing.avif")
+    def extract(frame: np.ndarray) -> Optional[XYWH]:
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         result = pose.process(rgb)
 
-        if result.pose_landmarks:
-            landmarks = result.pose_landmarks.landmark
+        if not result.pose_landmarks:
+            return None
 
-            head_landmarks = [
-                landmarks[mp_pose.PoseLandmark.NOSE],
-                landmarks[mp_pose.PoseLandmark.LEFT_EYE],
-                landmarks[mp_pose.PoseLandmark.RIGHT_EYE],
-                landmarks[mp_pose.PoseLandmark.LEFT_EAR],
-                landmarks[mp_pose.PoseLandmark.RIGHT_EAR],
-            ]
+        landmarks = result.pose_landmarks.landmark
 
-            bbox = head_bbox_from_pose(frame, head_landmarks)
-            print(bbox)
-            # frame = paint_face(frame, bbox)
+        head_landmarks = [
+            landmarks[mp_pose.PoseLandmark.NOSE],
+            landmarks[mp_pose.PoseLandmark.LEFT_EYE],
+            landmarks[mp_pose.PoseLandmark.RIGHT_EYE],
+            landmarks[mp_pose.PoseLandmark.LEFT_EAR],
+            landmarks[mp_pose.PoseLandmark.RIGHT_EAR],
+        ]
+
+        return head_bbox_from_pose(frame, head_landmarks)
+
+    yield extract
+
+
+def main():
+    # Constants
+    cap = cv2.VideoCapture(0)
+    with extract_position() as extract:
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            frame = cv2.imread("man-standing.avif")
+            bbox = extract(frame)
             frame = draw_bbox_xywh(frame, bbox)
-        cv2.imshow("Iris tracking", frame)
-        if cv2.waitKey(1) & 0xFF == 27:
-            break
+            # frame = paint_face(frame, bbox)
+            cv2.imshow("frame", frame)
+            if cv2.waitKey(1) & 0xFF == 27:
+                break
 
     cap.release()
     cv2.destroyAllWindows()
