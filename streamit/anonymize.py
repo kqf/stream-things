@@ -25,12 +25,10 @@ def to_xyxy(frame, landmarks):
     return x1, y1, x2, y2
 
 
-# Load the symbol mask once globally
-SYMBOL_PATH = "pattern.jpg"  # Path to your uploaded swirly pattern
-symbol_img = cv2.imread(SYMBOL_PATH, cv2.IMREAD_GRAYSCALE)
-
-# Binarize the symbol to create a mask
-_, symbol_mask = cv2.threshold(symbol_img, 128, 255, cv2.THRESH_BINARY)
+def read_the_pattern(path):
+    symbol_img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+    _, symbol_mask = cv2.threshold(symbol_img, 128, 255, cv2.THRESH_BINARY)
+    return symbol_mask
 
 
 def swirl_effect(img, strength=5, radius=200):
@@ -63,6 +61,7 @@ def to_mask(img_gray_3ch, threshold=1):
 def paint_face(
     frame: np.ndarray,
     bbox: tuple[int, int, int, int],
+    pattern: np.ndarray,
 ) -> np.ndarray:
     output = frame.copy()
     xmin, ymin, xmax, ymax = bbox
@@ -107,7 +106,7 @@ def paint_face(
 
     # Resize mask to square size
     mask_resized = cv2.resize(
-        symbol_mask, (xmax - xmin, ymax - ymin), interpolation=cv2.INTER_AREA
+        pattern, (xmax - xmin, ymax - ymin), interpolation=cv2.INTER_AREA
     )
     mask_3ch = cv2.merge([mask_resized] * 3)
     mask1_float = mask_3ch.astype(np.float32) / 255.0
