@@ -61,6 +61,7 @@ def to_mask(img_gray_3ch, threshold=1):
 def paint_face(
     frame: np.ndarray,
     bbox: tuple[int, int, int, int],
+    pattern: np.ndarray,
 ) -> np.ndarray:
     output = frame.copy()
     xmin, ymin, xmax, ymax = bbox
@@ -101,12 +102,12 @@ def paint_face(
     swirl1_gray = cv2.cvtColor(swirl1, cv2.COLOR_BGR2GRAY)
     swirl2_gray = cv2.cvtColor(swirl2, cv2.COLOR_BGR2GRAY)
     swirl1_gray = cv2.merge([swirl1_gray] * 3)
-            swirl2_gray = cv2.merge([swirl2_gray] * 3)
+    swirl2_gray = cv2.merge([swirl2_gray] * 3)
 
-            # Resize mask to square size
-            mask_resized = cv2.resize(
-                symbol_mask, (xmax - xmin, ymax - ymin), interpolation=cv2.INTER_AREA
-            )
+    # Resize mask to square size
+    mask_resized = cv2.resize(
+        pattern, (xmax - xmin, ymax - ymin), interpolation=cv2.INTER_AREA
+    )
     mask_3ch = cv2.merge([mask_resized] * 3)
     mask1_float = mask_3ch.astype(np.float32) / 255.0
     # to_mask -- we consider everything a pattern that above threshold
