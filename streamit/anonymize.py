@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from typing import Optional
+
 import cv2
 import mediapipe as mp
 import numpy as np
@@ -173,7 +173,7 @@ def extract_position():
         min_tracking_confidence=0.5,
     )
 
-    def extract(frame: np.ndarray) -> Optional[XYWH]:
+    def extract(frame: np.ndarray) -> XYWH | None:
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         result = pose.process(rgb)
 
