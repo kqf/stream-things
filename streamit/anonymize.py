@@ -207,7 +207,7 @@ def main():
             frame = cv2.imread("man-standing.avif")
             bbox = extract(frame)
             frame = draw_bbox_xywh(frame, bbox)
-            # frame = paint_face(frame, bbox)
+            # frame = paint_face(frame, bbox) ~
             cv2.imshow("frame", frame)
             if cv2.waitKey(1) & 0xFF == 27:
                 break
