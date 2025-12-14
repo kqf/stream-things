@@ -12,7 +12,7 @@ def frame() -> np.ndarray:
 
 def test_paints_face(frame):
     frame = draw_bbox_xywh(frame, (207, 28, 70, 88))
-    # frame = paint_face(frame, bbox)
+    # frame = paint_face(frame, bbox) ~
     cv2.imshow("frame", frame)
     cv2.waitKey()
     cv2.destroyAllWindows()
