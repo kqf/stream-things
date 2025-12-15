@@ -60,15 +60,13 @@ def to_mask(img_gray_3ch, threshold=1):
 
 def paint_face(
     frame: np.ndarray,
-    bbox: tuple[int, int, int, int],
+    bbox: XYWH,
     pattern: np.ndarray,
 ) -> np.ndarray:
     output = frame.copy()
-    xmin, ymin, xmax, ymax = bbox
+    xmin, ymin, w, h = bbox
 
     # Original box dimensions
-    w = xmax - xmin
-    h = ymax - ymin
     if w <= 0 or h <= 0:
         return output
 
@@ -76,8 +74,8 @@ def paint_face(
     side = max(w, h)
 
     # Center of the original box
-    cx = (xmin + xmax) // 2
-    cy = (ymin + ymax) // 2
+    cx = xmin + w // 2
+    cy = ymin + h // 2
 
     # New square coordinates
     xmin = cx - side // 2
