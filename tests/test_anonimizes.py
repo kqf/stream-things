@@ -11,9 +11,9 @@ def frame() -> np.ndarray:
 
 
 @pytest.fixture
-def pattern() -> np.ndarray:
-    noise = np.random.randint(0, 255, (512 * 512 * 1))
-    return noise.reshape(512, 512, 1).astype(np.uint8)
+def pattern(h=512, w=512, c=1) -> np.ndarray:
+    noise = np.random.randint(0, 255, (h * w * c))
+    return noise.reshape(h, w, c).astype(np.uint8)
 
 
 def test_paints_face(frame, pattern):
