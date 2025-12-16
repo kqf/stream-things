@@ -11,13 +11,15 @@ def frame() -> np.ndarray:
 
 
 @pytest.fixture
-def pattern() -> np.ndarray:
-    return np.random.randint(0, 255, (512 * 512)).reshape(512, 512, 1)
+def pattern(h=512, w=512, c=1) -> np.ndarray:
+    noise = np.random.randint(0, 255, (h * w * c))
+    return noise.reshape(h, w, c).astype(np.uint8)
 
 
 def test_paints_face(frame, pattern):
     bbox = (207, 28, 70, 88)
     frame = draw_bbox_xywh(frame, (207, 28, 70, 88))
+    print(pattern.shape)
     frame = paint_face(frame, bbox, pattern=pattern)
     cv2.imshow("frame", frame)
     cv2.waitKey()
