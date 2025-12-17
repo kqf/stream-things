@@ -203,9 +203,10 @@ def main():
                 break
 
             frame = cv2.imread("man-standing.avif")
+            pattern = np.ones((512, 512, 1), dtype=np.uint8)
             bbox = extract(frame)
             frame = draw_bbox_xywh(frame, bbox)
-            # frame = paint_face(frame, bbox) ~
+            frame = paint_face(frame, bbox, pattern=pattern)
             cv2.imshow("frame", frame)
             if cv2.waitKey(1) & 0xFF == 27:
                 break
