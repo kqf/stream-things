@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from typing import Optional
+
 import cv2
 import mediapipe as mp
 import numpy as np
@@ -25,12 +25,10 @@ def to_xyxy(frame, landmarks):
     return x1, y1, x2, y2
 
 
-# Load the symbol mask once globally
-SYMBOL_PATH = "pattern.jpg"  # Path to your uploaded swirly pattern
-symbol_img = cv2.imread(SYMBOL_PATH, cv2.IMREAD_GRAYSCALE)
-
-# Binarize the symbol to create a mask
-_, symbol_mask = cv2.threshold(symbol_img, 128, 255, cv2.THRESH_BINARY)
+def read_the_pattern(path):
+    symbol_img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+    _, symbol_mask = cv2.threshold(symbol_img, 128, 255, cv2.THRESH_BINARY)
+    return symbol_mask
 
 
 def swirl_effect(img, strength=5, radius=200):
@@ -62,14 +60,13 @@ def to_mask(img_gray_3ch, threshold=1):
 
 def paint_face(
     frame: np.ndarray,
-    bbox: tuple[int, int, int, int],
+    bbox: XYWH,
+    pattern: np.ndarray,
 ) -> np.ndarray:
     output = frame.copy()
-    xmin, ymin, xmax, ymax = bbox
+    xmin, ymin, w, h = bbox
 
     # Original box dimensions
-    w = xmax - xmin
-    h = ymax - ymin
     if w <= 0 or h <= 0:
         return output
 
@@ -77,8 +74,8 @@ def paint_face(
     side = max(w, h)
 
     # Center of the original box
-    cx = (xmin + xmax) // 2
-    cy = (ymin + ymax) // 2
+    cx = xmin + w // 2
+    cy = ymin + h // 2
 
     # New square coordinates
     xmin = cx - side // 2
@@ -107,7 +104,7 @@ def paint_face(
 
     # Resize mask to square size
     mask_resized = cv2.resize(
-        symbol_mask, (xmax - xmin, ymax - ymin), interpolation=cv2.INTER_AREA
+        pattern, (xmax - xmin, ymax - ymin), interpolation=cv2.INTER_AREA
     )
     mask_3ch = cv2.merge([mask_resized] * 3)
     mask1_float = mask_3ch.astype(np.float32) / 255.0
@@ -174,7 +171,7 @@ def extract_position():
         min_tracking_confidence=0.5,
     )
 
-    def extract(frame: np.ndarray) -> Optional[XYWH]:
+    def extract(frame: np.ndarray) -> XYWH | None:
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         result = pose.process(rgb)
 
@@ -206,9 +203,10 @@ def main():
                 break
 
             frame = cv2.imread("man-standing.avif")
+            pattern = np.ones((512, 512, 1), dtype=np.uint8)
             bbox = extract(frame)
             frame = draw_bbox_xywh(frame, bbox)
-            # frame = paint_face(frame, bbox)
+            frame = paint_face(frame, bbox, pattern=pattern)
             cv2.imshow("frame", frame)
             if cv2.waitKey(1) & 0xFF == 27:
                 break
