@@ -75,7 +75,7 @@ def paint_face(
 
     # Center of the original box
     cx = xmin + w // 2
-    cy = ymin + h // 2
+    cy = ymin + h // 2 - h // 12
 
     # New square coordinates
     xmin = cx - side // 2
