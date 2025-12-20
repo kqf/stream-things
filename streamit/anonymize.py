@@ -136,27 +136,48 @@ def draw_bbox_xywh(frame, bbox, color=(0, 255, 0), thickness=2):
     return frame
 
 
-def head_bbox_from_pose(frame, head_landmarks, padding=0.2):
-    h, w, _ = frame.shape
+def head_bbox_from_pose(frame, landmarks, padding=0.15):
+    h_img, w_img, _ = frame.shape
 
-    xs = [int(lm.x * w) for lm in head_landmarks if lm.visibility > 0.5]
-    ys = [int(lm.y * h) for lm in head_landmarks if lm.visibility > 0.5]
+    def px(lm):
+        return int(lm.x * w_img), int(lm.y * h_img)
 
-    if not xs or not ys:
+    nose, l_sh, r_sh = landmarks
+    if l_sh.visibility < 0.4 or r_sh.visibility < 0.4:
         return None
 
-    x1, x2 = min(xs), max(xs)
-    y1, y2 = min(ys), max(ys)
+    lx, ly = px(l_sh)
+    rx, ry = px(r_sh)
 
-    pad_x = int((x2 - x1) * padding)
-    pad_y = int((y2 - y1) * padding)
+    shoulder_width = abs(rx - lx)
+    if shoulder_width < 10:  # too small → unreliable
+        return None
 
-    x1 = max(0, x1 - pad_x)
-    y1 = max(0, y1 - pad_y)
-    x2 = min(w, x2 + pad_x)
-    y2 = min(h, y2 + pad_y)
-    h = (y2 - y1) * 6
-    return (x1, y1 - h // 3, x2 - x1, h)  # XYWH
+    head_size = int(0.9 * shoulder_width)
+    head_size = max(30, min(head_size, int(0.6 * h_img)))
+
+    if nose.visibility > 0.4:
+        cx, cy = px(nose)
+    else:
+        cx = (lx + rx) // 2
+        cy = min(ly, ry) - int(0.6 * head_size)
+
+    x1 = cx - head_size // 2
+    y1 = cy - int(0.8 * head_size)
+    x2 = x1 + head_size
+    y2 = y1 + head_size
+
+    pad = int(head_size * padding)
+    x1 -= pad
+    y1 -= pad
+    x2 += pad
+    y2 += pad
+
+    x1 = max(0, x1)
+    y1 = max(0, y1)
+    x2 = min(w_img, x2)
+    y2 = min(h_img, y2)
+    return (x1, y1, x2 - x1, y2 - y1)
 
 
 @contextmanager
@@ -186,6 +207,12 @@ def extract_position():
             landmarks[mp_pose.PoseLandmark.RIGHT_EYE],
             landmarks[mp_pose.PoseLandmark.LEFT_EAR],
             landmarks[mp_pose.PoseLandmark.RIGHT_EAR],
+        ]
+
+        head_landmarks = [
+            landmarks[mp.solutions.pose.PoseLandmark.NOSE],
+            landmarks[mp.solutions.pose.PoseLandmark.LEFT_SHOULDER],
+            landmarks[mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER],
         ]
 
         return head_bbox_from_pose(frame, head_landmarks)
