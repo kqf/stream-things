@@ -156,9 +156,6 @@ def head_bbox_from_pose(frame, landmarks, padding=0.15):
     head_size = int(0.9 * shoulder_width)
     head_size = max(30, min(head_size, int(0.6 * h_img)))
 
-    # if nose.visibility > 0.4: ~
-    #     cx, cy = px(nose) ~
-    # else: ~
     cx = (lx + rx) // 2
     cy = min(ly, ry) - int(0.6 * head_size)
 
