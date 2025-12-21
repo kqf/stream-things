@@ -217,6 +217,39 @@ def extract_position():
     yield extract
 
 
+def blur_head_from_pose(
+    frame: np.ndarray,
+    landmarks,
+    radius_scale: float = 0.35,
+    blur_kernel: int = 51,
+) -> np.ndarray:
+    h, w, _ = frame.shape
+    mp_pose = mp.solutions.pose
+
+    nose = landmarks[mp_pose.PoseLandmark.NOSE]
+    left_shoulder = landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER]
+    right_shoulder = landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER]
+
+    # Convert normalized coordinates to pixel space
+    cx, cy = int(nose.x * w), int(nose.y * h)
+    lsx, lsy = int(left_shoulder.x * w), int(left_shoulder.y * h)
+    rsx, rsy = int(right_shoulder.x * w), int(right_shoulder.y * h)
+
+    shoulder_width = np.hypot(lsx - rsx, lsy - rsy)
+    radius = int(radius_scale * shoulder_width)
+
+    if radius <= 0:
+        return frame
+
+    mask = np.zeros((h, w), dtype=np.uint8)
+    cv2.circle(mask, (cx, cy), radius, 255, -1)
+
+    blurred = cv2.GaussianBlur(frame, (blur_kernel, blur_kernel), 0)
+
+    frame[mask == 255] = blurred[mask == 255]
+    return frame
+
+
 def main():
     # Constants
     cap = cv2.VideoCapture(1)
