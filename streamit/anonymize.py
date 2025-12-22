@@ -5,6 +5,7 @@ import mediapipe as mp
 import numpy as np
 
 XYWH = tuple[int, int, int, int]
+mp_pose = mp.solutions.pose
 
 
 def draw_face_box(frame, landmarks, color=(255, 0, 0)):
@@ -142,7 +143,10 @@ def head_bbox_from_pose(frame, landmarks, padding=0.15):
     def px(lm):
         return int(lm.x * w_img), int(lm.y * h_img)
 
-    nose, l_sh, r_sh = landmarks
+    # nose = landmarks[mp_pose.PoseLandmark.NOSE] ~~
+    l_sh = landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER]
+    r_sh = landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER]
+
     if l_sh.visibility < 0.4 or r_sh.visibility < 0.4:
         return None
 
@@ -216,7 +220,6 @@ def blur_head_from_pose(
     blur_kernel: int = 51,
 ) -> np.ndarray:
     h, w, _ = frame.shape
-    mp_pose = mp.solutions.pose
 
     nose = landmarks[mp_pose.PoseLandmark.NOSE]
     left_shoulder = landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER]
