@@ -201,14 +201,7 @@ def extract_position():
             return None
 
         landmarks = result.pose_landmarks.landmark
-
-        head_landmarks = [
-            landmarks[mp.solutions.pose.PoseLandmark.NOSE],
-            landmarks[mp.solutions.pose.PoseLandmark.LEFT_SHOULDER],
-            landmarks[mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER],
-        ]
-
-        return head_bbox_from_pose(frame, head_landmarks)
+        return head_bbox_from_pose(frame, landmarks)
 
     yield extract
 
