@@ -199,14 +199,6 @@ def extract_position():
         landmarks = result.pose_landmarks.landmark
 
         head_landmarks = [
-            landmarks[mp_pose.PoseLandmark.NOSE],
-            landmarks[mp_pose.PoseLandmark.LEFT_EYE],
-            landmarks[mp_pose.PoseLandmark.RIGHT_EYE],
-            landmarks[mp_pose.PoseLandmark.LEFT_EAR],
-            landmarks[mp_pose.PoseLandmark.RIGHT_EAR],
-        ]
-
-        head_landmarks = [
             landmarks[mp.solutions.pose.PoseLandmark.NOSE],
             landmarks[mp.solutions.pose.PoseLandmark.LEFT_SHOULDER],
             landmarks[mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER],
