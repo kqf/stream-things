@@ -201,7 +201,8 @@ def extract_position():
             return None
 
         landmarks = result.pose_landmarks.landmark
-        return head_bbox_from_pose(frame, landmarks)
+        return landmarks
+        # return head_bbox_from_pose(frame, landmarks)
 
     yield extract
 
@@ -240,7 +241,7 @@ def blur_head_from_pose(
 
 def main():
     # Constants
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
     with extract_position() as extract:
         while True:
             ret, frame = cap.read()
