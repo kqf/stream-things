@@ -247,11 +247,12 @@ def main():
             if not ret:
                 break
 
-            pattern = np.ones((512, 512, 1), dtype=np.uint8)
-            bbox = extract(frame)
-            if bbox is not None:
-                frame = draw_bbox_xywh(frame, bbox)
-                frame = paint_face(frame, bbox, pattern=pattern)
+            # pattern = np.ones((512, 512, 1), dtype=np.uint8)
+            landmarks = extract(frame)
+            if landmarks is not None:
+                frame = blur_head_from_pose(frame, landmarks)
+                # frame = draw_bbox_xywh(frame, landmarks)
+                # frame = paint_face(frame, landmarks, pattern=pattern)
 
             cv2.imshow("frame", frame)
             if cv2.waitKey(1) & 0xFF == 27:
