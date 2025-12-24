@@ -182,7 +182,7 @@ def head_bbox_from_pose(frame, landmarks, padding=0.15):
 
 
 @contextmanager
-def extract_position():
+def extract_position():  # sourcery skip: assign-if-exp, reintroduce-else
     mp_pose = mp.solutions.pose
     pose = mp_pose.Pose(
         static_image_mode=False,
@@ -245,12 +245,9 @@ def main():
             if not ret:
                 break
 
-            # pattern = np.ones((512, 512, 1), dtype=np.uint8)
             landmarks = extract(frame)
             if landmarks is not None:
                 frame = blur_head_from_pose(frame, landmarks)
-                # frame = draw_bbox_xywh(frame, landmarks)
-                # frame = paint_face(frame, landmarks, pattern=pattern)
 
             cv2.imshow("frame", frame)
             if cv2.waitKey(1) & 0xFF == 27:
