@@ -199,10 +199,7 @@ def extract_position():
 
         if not result.pose_landmarks:
             return None
-
-        landmarks = result.pose_landmarks.landmark
-        return landmarks
-        # return head_bbox_from_pose(frame, landmarks)
+        return result.pose_landmarks.landmark
 
     yield extract
 
